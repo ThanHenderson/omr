@@ -43,9 +43,17 @@ omr_add_library(omrport_obj OBJECT
 	${CMAKE_CURRENT_BINARY_DIR}/ut_omrport.c
 )
 
+add_dependencies(omrport_obj jemalloc)
+
+target_link_libraries(omrport_obj
+	PRIVATE
+		${jemalloc_LIB}
+)
 target_include_directories(omrport_obj
 	PUBLIC
 		$<TARGET_PROPERTY:omr_base,INTERFACE_INCLUDE_DIRECTORIES>
+	PRIVATE
+		${jemalloc_INCLUDE_DIR}
 )
 
 if(OMR_OPT_CUDA)
@@ -432,6 +440,10 @@ omr_add_library(omrport STATIC
 	$<TARGET_OBJECTS:omrport_obj>
 )
 
+add_dependencies(omrport jemalloc)
+
+target_include_directories(omrport PRIVATE ${jemalloc_INCLUDE_DIR})
+
 # Duplicate the export list onto the static library version
 get_target_property(port_exports omrport_obj EXPORTED_SYMBOLS)
 omr_add_exports(omrport ${port_exports})
@@ -445,6 +457,7 @@ target_link_libraries(omrport
 		j9pool
 		${OMR_THREAD_LIB}
 		${CMAKE_DL_LIBS}
+		${jemalloc_LIB}
 )
 
 if(OMR_OS_ZOS)

@@ -19,9 +19,16 @@
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
 ###############################################################################
 
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH ${jemalloc_SOURCE_DIR}/lib)
+
 omr_add_executable(omr_ddrgen
 	ddrgen.cpp
 )
+
+add_dependencies(omr_ddrgen jemalloc)
 
 set_property(
 	TARGET omr_ddrgen
@@ -36,6 +43,7 @@ target_link_libraries(omr_ddrgen
 	omr_ddr_scanner
 	omrport
 	j9thrstatic
+	"-Wl,--disable-new-dtags"
 )
 
 if(OMRPORT_OMRSIG_SUPPORT)

@@ -73,6 +73,18 @@ include(cmake/config.cmake)
 enable_testing()
 
 ###
+### jemalloc external project
+###
+include(FetchContent)
+FetchContent_Declare(jemalloc
+	GIT_REPOSITORY    https://github.com/thanhenderson/jemalloc.git
+	GIT_TAG           below4gb
+)
+FetchContent_MakeAvailable(jemalloc)
+set(jemalloc_INCLUDE_DIR ${jemalloc_SOURCE_DIR}/include CACHE INTERNAL "")
+set(jemalloc_LIB ${jemalloc_SOURCE_DIR}/lib/libjemalloc.so CACHE INTERNAL "")
+
+###
 ### omr_base: basic includes and definitions needed everywhere
 ###
 
