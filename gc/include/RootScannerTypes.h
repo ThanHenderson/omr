@@ -40,6 +40,7 @@ typedef enum RootScannerEntity {
 	RootScannerEntity_OwnableSynchronizerObjects,
 	RootScannerEntity_ContinuationObjects,
 	RootScannerEntity_StringTable,
+	RootScannerEntity_ResolvedMethodNameTable,
 	RootScannerEntity_JNIGlobalReferences,
 	RootScannerEntity_JNIWeakGlobalReferences,
 	RootScannerEntity_DebuggerReferences,

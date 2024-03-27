@@ -3153,6 +3153,8 @@ MM_Scavenger::scavengeRememberedSetList(MM_EnvironmentStandard *env)
 			omrobjectptr_t objectPtr = *slotPtr;
 
 			if(NULL != objectPtr) {
+				// fprintf(stderr, "SCAVENGE: Object pointer: %p\n", objectPtr);
+				// fprintf(stderr, "SCAVENGE: Object pointer remembered bits: %ld\n", _extensions->objectModel.getRememberedBits(objectPtr));
 				Assert_MM_true(_extensions->objectModel.isRemembered(objectPtr));
 				numElements += 1;
 
