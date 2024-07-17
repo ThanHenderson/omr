@@ -744,6 +744,9 @@ public:
 	bool scavengerAlignHotFields; /**< True if the scavenger is to check the hot field description for an object in order to better cache align it when tenuring (enabled with the -Xgc:hotAlignment option) */
 	uintptr_t suballocatorInitialSize; /**< the initial chunk size in bytes for the J9Heap suballocator (enabled with the -Xgc:suballocatorInitialSize option) */
 	uintptr_t suballocatorCommitSize; /**< the commit size in bytes for the J9Heap suballocator (enabled with the -Xgc:suballocatorCommitSize option) */
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+	bool suballocatorQuickAlloc;
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
 
 #if defined(OMR_GC_COMPRESSED_POINTERS)
 	bool shouldAllowShiftingCompression; /**< temporary option to enable compressed reference scaling by shifting pointers */
@@ -1868,6 +1871,9 @@ public:
 		, scavengerAlignHotFields(true) /* VM Design 1774: hot field alignment is on by default */
 		, suballocatorInitialSize(SUBALLOCATOR_INITIAL_SIZE) /* default for J9Heap suballocator initial size is 200 MB */
 		, suballocatorCommitSize(SUBALLOCATOR_COMMIT_SIZE) /* default for J9Heap suballocator commit size is 50 MB */
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+		, suballocatorQuickAlloc(true) /* use mmap-based allocation by default for the J9Heap suballoctor */
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
 #if defined(OMR_GC_COMPRESSED_POINTERS)
 		, shouldAllowShiftingCompression(true) /* VM Design 1810: shifting compression enabled, by default, for compressed refs */
 		, shouldForceSpecifiedShiftingCompression(0)

@@ -174,6 +174,11 @@ MM_MemoryManager::createVirtualMemoryForHeap(MM_EnvironmentBase *env, MM_MemoryH
 			/* Set the commit size for the sub allocator. This needs to be completed before the call to omrmem_ensure_capacity32 */
 			omrport_control(OMRPORT_CTLDATA_ALLOCATE32_COMMIT_SIZE, extensions->suballocatorCommitSize);
 
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+			/* Set if the sub allocator should use ALLOC_QUICK. This needs to be completed before the call to omrmem_ensure_capacity32 */
+			omrport_control(OMRPORT_CTLDATA_ALLOCATE32_QUICK_ALLOC, extensions->suballocatorQuickAlloc);
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
+
 			if (!shouldHeapBeAllocatedFirst) {
 				if (OMRPORT_ENSURE_CAPACITY_FAILED == omrmem_ensure_capacity32(extensions->suballocatorInitialSize)) {
 					extensions->heapInitializationFailureReason = MM_GCExtensionsBase::HEAP_INITIALIZATION_FAILURE_REASON_CAN_NOT_ALLOCATE_LOW_MEMORY_RESERVE;

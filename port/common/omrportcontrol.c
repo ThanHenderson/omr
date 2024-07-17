@@ -73,7 +73,15 @@ omrport_control(struct OMRPortLibrary *portLibrary, const char *key, uintptr_t v
 		}
 		return 0;
 	}
-#endif
+#if defined(LINUX)
+	else if (!strcmp(OMRPORT_CTLDATA_ALLOCATE32_QUICK_ALLOC, key)) {
+		if (FALSE == value) {
+			PPG_mem_mem32_subAllocHeapMem32.suballocator_quickAlloc = FALSE;
+		}
+		return 0;
+	}
+#endif /* defined(LINUX) */
+#endif /* defined(OMR_ENV_DATA64) */
 
 #if defined(OMR_RAS_TDF_TRACE)
 	if (!strcmp(OMRPORT_CTLDATA_TRACE_START, key) && value) {

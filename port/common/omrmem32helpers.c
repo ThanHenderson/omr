@@ -37,14 +37,13 @@ static void *reserveAndCommitRegion(struct OMRPortLibrary *portLibrary, uintptr_
 #define VMEM_MODE_COMMIT OMRPORT_VMEM_MEMORY_MODE_READ | OMRPORT_VMEM_MEMORY_MODE_WRITE | OMRPORT_VMEM_MEMORY_MODE_COMMIT
 #define VMEM_MODE_WITHOUT_COMMIT OMRPORT_VMEM_MEMORY_MODE_READ | OMRPORT_VMEM_MEMORY_MODE_WRITE
 
+#define MEM32_LIMIT 0XFFFFFFFF
 struct {
 	uintptr_t base;
 	uintptr_t limit;
 } regions[] = {
-	{0x0, 0xFFFFFFFF}
+	{0x0, MEM32_LIMIT}
 };
-
-#define MEM32_LIMIT 0XFFFFFFFF
 
 /* VMDESIGN 1761 The size of a suballocation heap.
  * See VMDESIGN 1761 for the rationale behind the selection of this size.
@@ -72,6 +71,9 @@ startup_memory32(struct OMRPortLibrary *portLibrary)
 	PPG_mem_mem32_subAllocHeapMem32.subCommitHeapWrapper = NULL;
 	PPG_mem_mem32_subAllocHeapMem32.suballocator_initialSize = 0;
 	PPG_mem_mem32_subAllocHeapMem32.suballocator_commitSize = 0;
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+	PPG_mem_mem32_subAllocHeapMem32.suballocator_quickAlloc = TRUE;
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
 
 	/* initialize the monitor in subAllocHeap32 */
 	if (0 != omrthread_monitor_init(&(PPG_mem_mem32_subAllocHeapMem32.monitor), 0)) {
@@ -444,9 +446,22 @@ allocate_memory32(struct OMRPortLibrary *portLibrary, uintptr_t byteAmount, cons
 		returnPtr = iterateHeapsAndSubAllocate(portLibrary, byteAmount);
 		if (NULL == returnPtr) {
 			if (byteAmount >= HEAP_SIZE_BYTES) {
-				returnPtr = allocateLargeRegion(portLibrary, byteAmount, callSite, 0);
+				returnPtr = allocateLargeRegion(portLibrary,
+								byteAmount,
+								callSite,
+								0);
 			} else {
-				returnPtr = allocateRegion(portLibrary, HEAP_SIZE_BYTES, byteAmount, callSite, 0);
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+				/* For 64 bit linux, use the OMRPORT_VMEM_ALLOC_QUICK flag if it has not been disabled. */
+				uintptr_t vmemAllocOptions = PPG_mem_mem32_subAllocHeapMem32.suballocator_quickAlloc ? OMRPORT_VMEM_ALLOC_QUICK : 0;
+#else /* defined(OMR_ENV_DATA64) && defined(LINUX) */
+				uintptr_t vmemAllocOptions = 0;
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
+				returnPtr = allocateRegion(portLibrary,
+							   HEAP_SIZE_BYTES,
+							   byteAmount,
+							   callSite,
+							   vmemAllocOptions);
 			}
 		}
 
@@ -465,12 +480,12 @@ ensure_capacity32(struct OMRPortLibrary *portLibrary, uintptr_t byteAmount)
 {
 	J9HeapWrapper *heapWrapperCursor = NULL;
 	uintptr_t returnValue = OMRPORT_ENSURE_CAPACITY_FAILED;
-#if defined(OMR_ENV_DATA64)
-	/* For 64 bit os, use flag OMRPORT_VMEM_ALLOC_QUICK as it is in the startup period. */
+#if defined(OMR_ENV_DATA64) && defined(LINUX)
+	/* For 64 bit linux, use flag OMRPORT_VMEM_ALLOC_QUICK as it is in the startup period. */
 	uintptr_t vmemAllocOptions = OMRPORT_VMEM_ALLOC_QUICK;
-#else
+#else /* defined(OMR_ENV_DATA64) && defined(LINUX) */
 	uintptr_t vmemAllocOptions = 0;
-#endif
+#endif /* defined(OMR_ENV_DATA64) && defined(LINUX) */
 
 	Trc_PRT_mem_ensure_capacity32_Entry(byteAmount);
 
@@ -481,7 +496,7 @@ ensure_capacity32(struct OMRPortLibrary *portLibrary, uintptr_t byteAmount)
 	}
 #endif
 
-	/* Ensured byte amount should be at least HEAP_SIZE_BYTES large */
+	/* Ensured byte amount should be at least HEAP_SIZE_BYTES large. */
 	if (byteAmount < HEAP_SIZE_BYTES) {
 		byteAmount = HEAP_SIZE_BYTES;
 	}
